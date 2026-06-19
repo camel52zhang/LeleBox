@@ -94,7 +94,7 @@ androidComponents {
         def mode = flavors['mode'] ?: 'mode'
         def abi = flavors['abi'] ?: 'abi'
         variant.outputs.each { output ->
-            output.outputFileName.set("Lelebox-${abi}.apk")
+            output.outputFileName.set("LeleBox_v${android.defaultConfig.versionCode}.apk")
         }
     }
 }
@@ -146,4 +146,25 @@ dependencies {
     annotationProcessor libs.eventbus.annotation.processor
     annotationProcessor libs.glide.compiler
     coreLibraryDesugaring libs.desugar
+}
+
+// 自动将 APK 复制到 app/build/outputs/apk/ 根目录
+tasks.register('copyApkToRoot') {
+    doLast {
+        def source = file("${buildDir}/outputs/apk/leanbackArm64_v8a/release/LeleBox_v${android.defaultConfig.versionCode}.apk")
+        def destDir = file("${buildDir}/outputs/apk")
+        if (source.exists()) {
+            copy {
+                from source
+                into destDir
+            }
+            println "✅ APK 已复制到: ${destDir}/LeleBox_v${android.defaultConfig.versionCode}.apk"
+        } else {
+            println "⚠️ 未找到 APK: ${source}"
+        }
+    }
+}
+
+tasks.named('assembleLeanbackArm64_v8aRelease').configure {
+    finalizedBy(tasks.named('copyApkToRoot'))
 }
