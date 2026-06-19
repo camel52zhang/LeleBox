@@ -16,33 +16,22 @@ import com.fongmi.android.tv.utils.Task;
 import com.github.catvod.net.OkHttp;
 import com.github.catvod.utils.Path;
 
+import org.json.JSONArray;
 import org.json.JSONObject;
 
 import java.io.File;
 
 public class Updater implements Download.Callback, UpdateListener {
 
-    private final Download download;
+    private String apkUrl;
     private UpdateDialog dialog;
+    private Download download;
 
     private Updater() {
-        this.download = Download.create(getApk(), getFile());
     }
 
     public static Updater create() {
         return new Updater();
-    }
-
-    private File getFile() {
-        return Path.cache("update.apk");
-    }
-
-    private String getJson() {
-        return Github.getJson(BuildConfig.FLAVOR_mode);
-    }
-
-    private String getApk() {
-        return Github.getApk(BuildConfig.FLAVOR_mode + "-" + BuildConfig.FLAVOR_abi);
     }
 
     public Updater force() {
@@ -58,14 +47,39 @@ public class Updater implements Download.Callback, UpdateListener {
 
     private void doInBackground(FragmentActivity activity) {
         try {
-            JSONObject object = new JSONObject(OkHttp.string(getJson()));
-            String name = object.optString("name");
-            String desc = object.optString("desc");
-            int code = object.optInt("code");
-            if (code <= BuildConfig.VERSION_CODE) return;
-            App.post(() -> show(activity, name, desc));
+            String json = OkHttp.string(Github.API_LATEST_RELEASE);
+            JSONObject object = new JSONObject(json);
+            String tagName = object.getString("tag_name");
+            String body = object.optString("body", "");
+            int versionCode = extractVersionCode(tagName);
+
+            if (versionCode <= BuildConfig.VERSION_CODE) return;
+
+            JSONArray assets = object.getJSONArray("assets");
+            String apkUrl = null;
+            for (int i = 0; i < assets.length(); i++) {
+                JSONObject asset = assets.getJSONObject(i);
+                if (asset.getString("name").endsWith(".apk")) {
+                    apkUrl = asset.getString("browser_download_url");
+                    break;
+                }
+            }
+
+            if (apkUrl == null) return;
+
+            this.apkUrl = apkUrl;
+            App.post(() -> show(activity, tagName, body));
         } catch (Exception e) {
             e.printStackTrace();
+        }
+    }
+
+    private int extractVersionCode(String tagName) {
+        try {
+            String numeric = tagName.replaceAll("[^0-9]", "");
+            return Integer.parseInt(numeric);
+        } catch (Exception e) {
+            return 0;
         }
     }
 
@@ -77,13 +91,14 @@ public class Updater implements Download.Callback, UpdateListener {
     @Override
     public void onConfirm(View view) {
         view.setEnabled(false);
+        download = Download.create(apkUrl, Path.cache("update.apk"));
         download.start(this);
     }
 
     @Override
     public void onCancel(View view) {
         Setting.putUpdate(false);
-        download.cancel();
+        download = null;
         dismiss();
     }
 

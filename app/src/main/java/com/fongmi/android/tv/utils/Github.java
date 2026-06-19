@@ -1,18 +1,5 @@
 package com.fongmi.android.tv.utils;
 
 public class Github {
-
-    public static final String URL = "https://raw.githubusercontent.com/FongMi/Release/fongmi";
-
-    private static String getUrl(String name) {
-        return URL + "/apk/" + name;
-    }
-
-    public static String getJson(String name) {
-        return getUrl(name + ".json");
-    }
-
-    public static String getApk(String name) {
-        return getUrl(name + ".apk");
-    }
+    public static final String API_LATEST_RELEASE = "https://api.github.com/repos/camel52zhang/LeleBox/releases/latest";
 }
