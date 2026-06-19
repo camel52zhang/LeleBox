@@ -147,21 +147,3 @@ dependencies {
     annotationProcessor libs.glide.compiler
     coreLibraryDesugaring libs.desugar
 }
-
-// 手动执行: ./gradlew copyApkToRoot
-// 将 APK 从 flavor 子目录复制到 app/build/outputs/apk/ 根目录
-tasks.register('copyApkToRoot') {
-    doLast {
-        def source = file("${buildDir}/outputs/apk/leanbackArm64_v8a/release/LeleBox_v${android.defaultConfig.versionCode}.apk")
-        def destDir = file("${buildDir}/outputs/apk")
-        if (source.exists()) {
-            copy {
-                from source
-                into destDir
-            }
-            println "✅ APK 已复制到: ${destDir}/LeleBox_v${android.defaultConfig.versionCode}.apk"
-        } else {
-            println "⚠️ 未找到 APK: ${source}"
-        }
-    }
-}
