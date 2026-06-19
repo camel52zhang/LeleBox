@@ -148,7 +148,8 @@ dependencies {
     coreLibraryDesugaring libs.desugar
 }
 
-// 自动将 APK 复制到 app/build/outputs/apk/ 根目录
+// 手动执行: ./gradlew copyApkToRoot
+// 将 APK 从 flavor 子目录复制到 app/build/outputs/apk/ 根目录
 tasks.register('copyApkToRoot') {
     doLast {
         def source = file("${buildDir}/outputs/apk/leanbackArm64_v8a/release/LeleBox_v${android.defaultConfig.versionCode}.apk")
@@ -163,8 +164,4 @@ tasks.register('copyApkToRoot') {
             println "⚠️ 未找到 APK: ${source}"
         }
     }
-}
-
-tasks.named('assembleLeanbackArm64_v8aRelease').configure {
-    finalizedBy(tasks.named('copyApkToRoot'))
 }
