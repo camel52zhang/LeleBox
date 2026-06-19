@@ -24,22 +24,27 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.locks.ReadWriteLock;
+import java.util.concurrent.locks.ReentrantReadWriteLock;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
 public class VodConfig extends BaseConfig {
 
     private static final String TAG = VodConfig.class.getSimpleName();
+    
+    // 读写锁，保证多线程安全
+    private final ReadWriteLock lock = new ReentrantReadWriteLock();
 
-    private Site home;
-    private String wall;
-    private Parse parse;
-    private List<Doh> doh;
-    private List<Rule> rules;
-    private List<Site> sites;
-    private List<String> ads;
-    private List<String> flags;
-    private List<Parse> parses;
+    private volatile Site home;
+    private volatile String wall;
+    private volatile Parse parse;
+    private volatile List<Doh> doh;
+    private volatile List<Rule> rules;
+    private volatile List<Site> sites;
+    private volatile List<String> ads;
+    private volatile List<String> flags;
+    private volatile List<Parse> parses;
 
     public static VodConfig get() {
         return Loader.INSTANCE;
@@ -79,17 +84,22 @@ public class VodConfig extends BaseConfig {
     }
 
     public VodConfig clear() {
-        ads = null;
-        doh = null;
-        home = null;
-        wall = null;
-        parse = null;
-        sites = null;
-        flags = null;
-        rules = null;
-        parses = null;
-        BaseLoader.get().clear();
-        RuleConfig.get().invalidate();
+        lock.writeLock().lock();
+        try {
+            ads = null;
+            doh = null;
+            home = null;
+            wall = null;
+            parse = null;
+            sites = null;
+            flags = null;
+            rules = null;
+            parses = null;
+            BaseLoader.get().clear();
+            RuleConfig.get().invalidate();
+        } finally {
+            lock.writeLock().unlock();
+        }
         return this;
     }
 
@@ -190,41 +200,81 @@ public class VodConfig extends BaseConfig {
     }
 
     public List<Site> getSites() {
-        return sites == null ? Collections.emptyList() : sites;
+        lock.readLock().lock();
+        try {
+            return sites == null ? Collections.emptyList() : sites;
+        } finally {
+            lock.readLock().unlock();
+        }
     }
 
     private void setSites(List<Site> sites) {
-        this.sites = sites;
+        lock.writeLock().lock();
+        try {
+            this.sites = sites;
+        } finally {
+            lock.writeLock().unlock();
+        }
     }
 
     public List<Parse> getParses() {
-        return parses == null ? Collections.emptyList() : parses;
+        lock.readLock().lock();
+        try {
+            return parses == null ? Collections.emptyList() : parses;
+        } finally {
+            lock.readLock().unlock();
+        }
     }
 
     private void setParses(List<Parse> parses) {
-        if (!parses.isEmpty()) parses.add(0, Parse.god());
-        this.parses = parses;
+        lock.writeLock().lock();
+        try {
+            if (!parses.isEmpty()) parses.add(0, Parse.god());
+            this.parses = parses;
+        } finally {
+            lock.writeLock().unlock();
+        }
     }
 
     public List<Doh> getDoh() {
         List<Doh> items = Doh.get(App.get());
-        if (doh == null) return items;
-        items.removeAll(doh);
-        items.addAll(doh);
-        return items;
+        lock.readLock().lock();
+        try {
+            if (doh == null) return items;
+            items.removeAll(doh);
+            items.addAll(doh);
+            return items;
+        } finally {
+            lock.readLock().unlock();
+        }
     }
 
     private void setDoh(List<Doh> doh) {
-        this.doh = doh;
+        lock.writeLock().lock();
+        try {
+            this.doh = doh;
+        } finally {
+            lock.writeLock().unlock();
+        }
     }
 
     public List<Rule> getRules() {
-        return rules == null ? Collections.emptyList() : rules;
+        lock.readLock().lock();
+        try {
+            return rules == null ? Collections.emptyList() : rules;
+        } finally {
+            lock.readLock().unlock();
+        }
     }
 
     private void setRules(List<Rule> rules) {
-        this.rules = rules;
-        RuleConfig.get().invalidate();
+        lock.writeLock().lock();
+        try {
+            this.rules = rules;
+            RuleConfig.get().invalidate();
+        } finally {
+            lock.writeLock().unlock();
+        }
     }
 
     public List<Parse> getParses(int type) {
@@ -238,20 +288,40 @@ public class VodConfig extends BaseConfig {
     }
 
     public List<String> getFlags() {
-        return flags == null ? Collections.emptyList() : flags;
+        lock.readLock().lock();
+        try {
+            return flags == null ? Collections.emptyList() : flags;
+        } finally {
+            lock.readLock().unlock();
+        }
     }
 
     private void setFlags(List<String> flags) {
-        this.flags = flags;
+        lock.writeLock().lock();
+        try {
+            this.flags = flags;
+        } finally {
+            lock.writeLock().unlock();
+        }
     }
 
     public List<String> getAds() {
-        return ads == null ? Collections.emptyList() : ads;
+        lock.readLock().lock();
+        try {
+            return ads == null ? Collections.emptyList() : ads;
+        } finally {
+            lock.readLock().unlock();
+        }
     }
 
     private void setAds(List<String> ads) {
-        this.ads = ads;
-        RuleConfig.get().invalidate();
+        lock.writeLock().lock();
+        try {
+            this.ads = ads;
+            RuleConfig.get().invalidate();
+        } finally {
+            lock.writeLock().unlock();
+        }
     }
 
     public Parse getParse() {

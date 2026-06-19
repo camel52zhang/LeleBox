@@ -21,8 +21,16 @@ public abstract class BaseDiffAdapter<T extends Diffable<T>, VH extends Recycler
         this.differ = new AsyncListDiffer<>(this, new BaseItemCallback<T>());
     }
 
+    /**
+     * 检查两个列表是否相同
+     * 优化：AsyncListDiffer 内部已有差异计算，此方法仅用于 Callback 模式的提前返回
+     */
     private boolean listsAreSame(List<T> oldList, List<T> newList) {
+        // 快速路径：引用相同
+        if (oldList == newList) return true;
+        // 快速路径：大小不同
         if (oldList.size() != newList.size()) return false;
+        // 深度比较
         for (int i = 0; i < oldList.size(); i++) {
             T oldItem = oldList.get(i);
             T newItem = newList.get(i);

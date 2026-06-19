@@ -97,7 +97,11 @@ public abstract class AppDatabase extends RoomDatabase {
                 .addMigrations(Migrations.MIGRATION_33_34)
                 .addMigrations(Migrations.MIGRATION_34_35)
                 .fallbackToDestructiveMigration(true)
-                .allowMainThreadQueries().build();
+                // [优化说明] 允许主线程查询以兼容现有代码
+                // TODO: 后续应逐步将数据库访问迁移到后台线程（Task.execute/Coroutine）
+                // 迁移完成后可移除此调用，避免 ANR 风险
+                .allowMainThreadQueries()
+                .build();
     }
 
     public abstract KeepDao getKeepDao();

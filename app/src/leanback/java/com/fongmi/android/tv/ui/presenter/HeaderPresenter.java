@@ -6,6 +6,7 @@ import android.view.ViewGroup;
 import androidx.annotation.NonNull;
 import androidx.leanback.widget.Presenter;
 
+import com.fongmi.android.tv.bean.TextHeader;
 import com.fongmi.android.tv.databinding.AdapterHeaderBinding;
 import com.fongmi.android.tv.utils.ResUtil;
 
@@ -20,7 +21,13 @@ public class HeaderPresenter extends Presenter {
     @Override
     public void onBindViewHolder(@NonNull Presenter.ViewHolder viewHolder, Object object) {
         HeaderPresenter.ViewHolder holder = (HeaderPresenter.ViewHolder) viewHolder;
-        holder.binding.text.setText(object instanceof String ? object.toString() : ResUtil.getString((int) object));
+        holder.binding.text.setText(getText(object));
+    }
+
+    private String getText(Object object) {
+        if (object instanceof TextHeader) return ((TextHeader) object).getText();
+        if (object instanceof String) return object.toString();
+        return ResUtil.getString((int) object);
     }
 
     @Override

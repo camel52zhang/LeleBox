@@ -60,13 +60,26 @@ public class PlayerManager implements ParseCallback {
     }
 
     public void release() {
-        player.removeListener(listener);
+        // 先移除监听器，防止 release 过程中触发回调
+        if (player != null) {
+            player.removeListener(listener);
+        }
         App.removeCallbacks(runnable);
         releaseDanmakuController();
-        if (engine == null) return;
-        engine.release();
-        engine = null;
+        
+        // 释放播放引擎
+        if (engine != null) {
+            engine.release();
+            engine = null;
+        }
+        
+        // 最后清理引用，避免内存泄漏
         player = null;
+        spec = null;
+        videoSize = null;
+        parseJob = null;
+        initTrack = false;
+        retry = 0;
     }
 
     public Player getPlayer() {

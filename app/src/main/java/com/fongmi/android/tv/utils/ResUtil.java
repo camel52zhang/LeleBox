@@ -26,7 +26,17 @@ import androidx.core.content.ContextCompat;
 
 import com.fongmi.android.tv.App;
 
+/**
+ * 资源工具类
+ * 
+ * 包含以下功能模块：
+ * - 屏幕相关：getDisplayMetrics, getScreenWidth, getScreenHeight, getScreenOrientation, isEdge, isLand, isPad
+ * - 尺寸转换：sp2px, dp2px, getTextWidth
+ * - 资源获取：getString, getStringArray, getTypedArray, getDrawable, getColor, getAnim, getDisplay
+ */
 public class ResUtil {
+
+    // ==================== 屏幕相关 ====================
 
     public static DisplayMetrics getDisplayMetrics() {
         return getDisplayMetrics(App.get());
@@ -92,6 +102,14 @@ public class ResUtil {
         return App.get().getResources().getConfiguration().smallestScreenWidthDp >= 600;
     }
 
+    public static int getTextWidth(String content, int size) {
+        Paint paint = new Paint();
+        paint.setTextSize(sp2px(size));
+        return (int) paint.measureText(content);
+    }
+
+    // ==================== 尺寸转换 ====================
+
     public static int sp2px(int sp) {
         return (int) TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_SP, sp, getDisplayMetrics());
     }
@@ -99,6 +117,8 @@ public class ResUtil {
     public static int dp2px(int dp) {
         return (int) TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, dp, getDisplayMetrics());
     }
+
+    // ==================== 资源获取 ====================
 
     public static String getString(@StringRes int resId) {
         return App.get().getResources().getString(resId);
@@ -130,11 +150,5 @@ public class ResUtil {
 
     public static Display getDisplay(Context context) {
         return ContextCompat.getDisplayOrDefault(context);
-    }
-
-    public static int getTextWidth(String content, int size) {
-        Paint paint = new Paint();
-        paint.setTextSize(sp2px(size));
-        return (int) paint.measureText(content);
     }
 }
